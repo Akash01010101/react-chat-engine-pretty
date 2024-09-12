@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import axios from 'axios';
+
 import {
   useMultiChatLogic,
   ChatList,
@@ -42,38 +44,37 @@ export const PrettyChatWindow = (props: PrettyChatWindowProps) => {
     props.httpUrl
   );
 
-  async function getOrCreateChat() {
-    const usernames = chatFormUsers.map(user => user.username);
-    const data = {
-      usernames: usernames,
-    };
-    const headers = {
-      'Project-ID': chatProps.projectId,
-      'User-Name': chatProps.username,
-      'User-Secret': chatProps.secret,
-    };
-    const url = 'https://api.chatengine.io/chats/';  
-    fetch(url, {  
-      method: 'PUT',  
-      headers: headers,  
-      body: JSON.stringify(data)  
-  })  
-  .then(response => {  
-      if (!response.ok) {  
-          throw new Error('Network response was not ok');  
-      }  
-      return response.json();  
-  })  
-  .then(r => {  
-      setIsChatFormActive(false);  
-      setChatFromUsers([]);  
-      chatProps.onChatCardClick(r.id);  
-  })  
-  .catch(e => {  
-      console.log("Error:", e);  
-  });  
-  }
+  async function getOrCreateChat() {  
+    const usernames = chatFormUsers.map(user => user.username);  
+    const data = {  
+        usernames: usernames,  
+    };  
+    const headers = {  
+        'Project-ID': chatProps.projectId,  
+        'User-Name': chatProps.username,  
+        'User-Secret': chatProps.secret,  
+        'Content-Type': 'application/json', // Include content type  
+    };  
 
+    try {  
+        const response = await fetch('https://api.chatengine.io/chats/', {  
+            method: 'PUT',  
+            headers: headers,  
+            body: JSON.stringify(data),  
+        });  
+
+        if (!response.ok) {  
+            throw new Error('Network response was not ok ' + response.statusText);  
+        }  
+
+        const result = await response.json();  
+        setIsChatFormActive(false);  
+        setChatFromUsers([]);  
+        chatProps.onChatCardClick(result.id);  
+    } catch (error) {  
+        console.error('There was a problem with the fetch operation:', error);  
+    }  
+}
   const onChatFormChange = (options: OptionType[]) => {
     const users: PersonObject[] = options.map(option =>
       JSON.parse(option.value)
