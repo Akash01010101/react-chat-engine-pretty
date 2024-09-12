@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 
-import axios from 'axios';
-
 import {
   useMultiChatLogic,
   ChatList,
@@ -54,12 +52,26 @@ export const PrettyChatWindow = (props: PrettyChatWindowProps) => {
       'User-Name': chatProps.username,
       'User-Secret': chatProps.secret,
     };
-
-    axios.put('https://api.chatengine.io/chats/', data, { headers }).then(r => {
-      setIsChatFormActive(false);
-      setChatFromUsers([]);
-      chatProps.onChatCardClick(r.data.id);
-    });
+    const url = 'https://api.chatengine.io/chats/';  
+    fetch(url, {  
+      method: 'PUT',  
+      headers: headers,  
+      body: JSON.stringify(data)  
+  })  
+  .then(response => {  
+      if (!response.ok) {  
+          throw new Error('Network response was not ok');  
+      }  
+      return response.json();  
+  })  
+  .then(r => {  
+      setIsChatFormActive(false);  
+      setChatFromUsers([]);  
+      chatProps.onChatCardClick(r.id);  
+  })  
+  .catch(e => {  
+      console.log("Error:", e);  
+  });  
   }
 
   const onChatFormChange = (options: OptionType[]) => {
