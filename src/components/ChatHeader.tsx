@@ -1,6 +1,5 @@
 import React, { CSSProperties } from 'react';
 
-import axios from 'axios';
 
 import { ChatHeaderProps, ChatObject } from 'react-chat-engine-advanced';
 
@@ -35,49 +34,69 @@ const ChatHeader = (props: CustomChatHeaderProps) => {
     : [];
   const otherMember = otherMembers.length > 0 ? otherMembers[0] : undefined;
 
-  const onFilesSelect: React.ChangeEventHandler<HTMLInputElement> = e => {
-    if (!props.chat) return;
-    setFilePickerLoading(true);
-
-    const headers = {
-      'Project-ID': props.projectId,
-      'User-Name': props.username,
-      'User-Secret': props.secret,
-    };
-
-    const formdata = new FormData();
-    const filesArr = Array.from(e.target.files !== null ? e.target.files : []);
-    filesArr.forEach(file => formdata.append('attachments', file, file.name));
-    formdata.append('created', nowTimeStamp());
-    formdata.append('sender_username', props.username);
-    formdata.append('custom_json', JSON.stringify({}));
-
-    axios
-      .post(
-        `https://api.chatengine.io/chats/${props.chat.id}/messages/`,
-        formdata,
-        { headers }
-      )
-      .then(() => setFilePickerLoading(false))
-      .catch(() => setFilePickerLoading(false));
+  const onFilesSelect: React.ChangeEventHandler<HTMLInputElement> = e => {  
+    if (!props.chat) return;  
+    setFilePickerLoading(true);  
+  
+    const headers = {  
+      'Project-ID': props.projectId,  
+      'User-Name': props.username,  
+      'User-Secret': props.secret,  
+    };  
+  
+    const formdata = new FormData();  
+    const filesArr = Array.from(e.target.files !== null ? e.target.files : []);  
+    filesArr.forEach(file => formdata.append('attachments', file, file.name));  
+    formdata.append('created', nowTimeStamp());  
+    formdata.append('sender_username', props.username);  
+    formdata.append('custom_json', JSON.stringify({}));  
+  
+    fetch(`https://api.chatengine.io/chats/${props.chat.id}/messages/`, {  
+      method: 'POST',  
+      headers: headers,  
+      body: formdata, // Include the form data in the request body  
+    })  
+      .then(response => {  
+        if (!response.ok) {  
+          throw new Error('Network response was not ok ' + response.statusText);  
+        }  
+        return response.json(); // Optionally handle the response if needed  
+      })  
+      .then(() => {  
+        setFilePickerLoading(false); // Set loading state to false on success  
+      })  
+      .catch(() => {  
+        setFilePickerLoading(false); // Ensure loading state is set to false on error  
+      });  
   };
 
-  const onDelete = () => {
-    if (!props.chat) return;
-    setDeleteLoading(true);
-
-    const headers = {
-      'Project-ID': props.projectId,
-      'User-Name': props.username,
-      'User-Secret': props.secret,
-    };
-
-    axios
-      .delete(`https://api.chatengine.io/chats/${props.chat.id}/`, { headers })
-      .then(r => {
-        setDeleteLoading(false);
-        props.onDeleteChat(r.data);
-      });
+  const onDelete = () => {  
+    if (!props.chat) return;  
+    setDeleteLoading(true);  
+  
+    const headers = {  
+      'Project-ID': props.projectId,  
+      'User-Name': props.username,  
+      'User-Secret': props.secret,  
+    };  
+  
+    fetch(`https://api.chatengine.io/chats/${props.chat.id}/`, {  
+      method: 'DELETE',  
+      headers: headers,  
+    })  
+      .then(response => {  
+        if (!response.ok) {  
+          throw new Error('Network response was not ok ' + response.statusText);  
+        }  
+        return response.json(); // Optionally handle the response if needed  
+      })  
+      .then(data => {  
+        setDeleteLoading(false); // Set loading state to false after response  
+        props.onDeleteChat(data); // Call the onDeleteChat prop with the response data  
+      })  
+      .catch(() => {  
+        setDeleteLoading(false); // Ensure loading state is set to false on error  
+      });  
   };
 
   if (!otherMember || !props.chat)

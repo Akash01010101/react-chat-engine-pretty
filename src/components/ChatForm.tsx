@@ -1,6 +1,6 @@
 import React, { CSSProperties, useRef, useEffect, useState } from 'react';
 
-import axios from 'axios';
+
 
 import { PersonObject } from 'react-chat-engine-advanced';
 
@@ -48,20 +48,27 @@ const ChatForm = (props: ChatFormProps) => {
     }
   });
 
-  const getAllUsers = (
-    onSuccess: (data: PersonObject[]) => void,
-    onError: () => void
-  ) => {
-    axios
-      .get('https://api.chatengine.io/users/search/', {
-        headers: {
-          'Project-ID': props.projectId,
-          'User-Name': props.username,
-          'User-Secret': props.secret,
-        },
-      })
-      .then(r => onSuccess(r.data))
-      .catch(() => onError);
+  const getAllUsers = (onSuccess: (data: PersonObject[]) => void, onError: () => void) => {  
+    fetch('https://api.chatengine.io/users/search/', {  
+      method: 'GET',  
+      headers: {  
+        'Project-ID': props.projectId,  
+        'User-Name': props.username,  
+        'User-Secret': props.secret,  
+      },  
+    })  
+      .then(response => {  
+        if (!response.ok) {  
+          throw new Error('Network response was not ok ' + response.statusText);  
+        }  
+        return response.json(); 
+      })  
+      .then(data => {  
+        onSuccess(data);  
+      })  
+      .catch(() => {  
+        onError(); 
+      });  
   };
 
   return (
